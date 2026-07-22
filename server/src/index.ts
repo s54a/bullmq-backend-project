@@ -91,7 +91,7 @@ app.post(
 
 app.get("/v1/chat/status/:jobId", async (req: Request, res: Response) => {
   try {
-    const id = req.params.id as string;
+    const id = req.params.jobId as string;
 
     const job = await chatQueue.getJob(id);
     if (!job) return res.status(404).json({ error: "Job not found" });
