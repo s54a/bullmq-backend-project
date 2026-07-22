@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { consumeToken } from "../lib/tokenBucket";
-import { chatQueue } from "../queue";
+import { consumeToken } from "../lib/tokenBucket.js";
+import { chatQueue } from "../queue.js";
 
 // Rough estimate until real token counting (tiktoken) lands in Stage 3.
 // Reserve/reconcile against actual usage once provider responses are wired up.

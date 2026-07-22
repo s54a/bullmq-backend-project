@@ -1,8 +1,8 @@
 import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
-import { db } from "../db/client";
-import { tenants } from "../db/schema";
+import { db } from "../db/client.js";
+import { tenants } from "../db/schema.js";
 
 export const adminRouter = Router();
 
