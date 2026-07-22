@@ -11,10 +11,11 @@ import { rateLimit } from "./middleware/rateLimit.js";
 import { chatQueue } from "./queue.js";
 import { getChatCompletion } from "./lib/provider.js";
 import "./worker.js";
+
 const app = express();
-app.use(cors());
-app.use(express.json());
+
 app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }));
+app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
