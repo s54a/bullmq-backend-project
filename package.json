@@ -1,0 +1,14 @@
+{
+  "name": "bullmq-render-demo",
+  "private": true,
+  "scripts": {
+    "dev:server": "pnpm --filter server dev",
+    "dev:worker": "pnpm --filter server worker",
+    "dev:client": "pnpm --filter client dev",
+    "dev": "concurrently -n \"API,WORKER,CLIENT\" -c \"green,yellow,blue\" \"pnpm dev:server\" \"pnpm dev:worker\" \"pnpm dev:client\"",
+    "build:client": "pnpm --filter client build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

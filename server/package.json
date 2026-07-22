@@ -1,5 +1,5 @@
 {
-  "name": "bullmq-render-server",
+  "name": "server",
   "version": "1.0.0",
   "description": "Express API with BullMQ background jobs",
   "type": "module",
