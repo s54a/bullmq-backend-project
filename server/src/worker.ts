@@ -1,9 +1,9 @@
 import "dotenv/config";
 import { Worker } from "bullmq";
-import { connection } from "./queue";
-import { db } from "./db/client";
-import { usageLogs } from "./db/schema";
-import { getChatCompletion } from "./lib/provider";
+import { connection } from "./queue.js";
+import { db } from "./db/client.js";
+import { usageLogs } from "./db/schema.js";
+import { getChatCompletion } from "./lib/provider.js";
 
 const worker = new Worker(
   "chat-completions",
