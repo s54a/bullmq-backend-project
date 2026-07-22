@@ -72,6 +72,18 @@ app.get("*", (req, res) =>
   res.sendFile(path.join(__dirname, "../../client/dist/index.html")),
 );
 
+app.use(
+  (
+    err: Error,
+    _req: Request,
+    res: Response,
+    _next: (err?: unknown) => void,
+  ) => {
+    console.error("[unhandled]", err);
+    res.status(500).json({ error: "Internal server error" });
+  },
+);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`API Server running on port ${PORT}`);

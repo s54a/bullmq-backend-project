@@ -23,101 +23,128 @@ function generateApiKey() {
 
 // POST /admin/tenants
 adminRouter.post("/tenants", async (req: Request, res: Response) => {
-  const { rpm_limit, tpm_limit, priority } = req.body;
-
-  if (!rpm_limit || !tpm_limit) {
-    return res
-      .status(400)
-      .json({ error: "rpm_limit and tpm_limit are required" });
+  console.log("[admin] POST /tenants", req.body);
+  try {
+    const { rpm_limit, tpm_limit, priority } = req.body;
+    if (!rpm_limit || !tpm_limit) {
+      return res
+        .status(400)
+        .json({ error: "rpm_limit and tpm_limit are required" });
+    }
+    if (priority && !["high", "medium", "low"].includes(priority)) {
+      return res
+        .status(400)
+        .json({ error: "priority must be high, medium, or low" });
+    }
+    const { raw, hash } = generateApiKey();
+    const [tenant] = await db
+      .insert(tenants)
+      .values({
+        apiKeyHash: hash,
+        rpmLimit: rpm_limit,
+        tpmLimit: tpm_limit,
+        priority: priority || "medium",
+      })
+      .returning();
+    res.status(201).json({
+      id: tenant.id,
+      apiKey: raw,
+      rpmLimit: tenant.rpmLimit,
+      tpmLimit: tenant.tpmLimit,
+      priority: tenant.priority,
+      createdAt: tenant.createdAt,
+    });
+  } catch (err) {
+    console.error("[admin] POST /tenants failed:", err);
+    res.status(500).json({ error: "Internal error creating tenant" });
   }
-  if (priority && !["high", "medium", "low"].includes(priority)) {
-    return res
-      .status(400)
-      .json({ error: "priority must be high, medium, or low" });
-  }
-
-  const { raw, hash } = generateApiKey();
-
-  const [tenant] = await db
-    .insert(tenants)
-    .values({
-      apiKeyHash: hash,
-      rpmLimit: rpm_limit,
-      tpmLimit: tpm_limit,
-      priority: priority || "medium",
-    })
-    .returning();
-
-  // raw key is returned ONCE — not retrievable again, only the hash is stored
-  res.status(201).json({
-    id: tenant.id,
-    apiKey: raw,
-    rpmLimit: tenant.rpmLimit,
-    tpmLimit: tenant.tpmLimit,
-    priority: tenant.priority,
-    createdAt: tenant.createdAt,
-  });
 });
 
 // GET /admin/tenants
 adminRouter.get("/tenants", async (_req: Request, res: Response) => {
-  const rows = await db
-    .select({
-      id: tenants.id,
-      rpmLimit: tenants.rpmLimit,
-      tpmLimit: tenants.tpmLimit,
-      priority: tenants.priority,
-      createdAt: tenants.createdAt,
-    })
-    .from(tenants);
-  res.json(rows);
+  try {
+    const rows = await db
+      .select({
+        id: tenants.id,
+        rpmLimit: tenants.rpmLimit,
+        tpmLimit: tenants.tpmLimit,
+        priority: tenants.priority,
+        createdAt: tenants.createdAt,
+      })
+      .from(tenants);
+    res.json(rows);
+  } catch (err) {
+    console.error("[admin] GET /tenants failed:", err);
+    res.status(500).json({ error: "Internal error fetching tenants" });
+  }
 });
 
 // GET /admin/tenants/:id
 adminRouter.get("/tenants/:id", async (req: Request, res: Response) => {
-  const id = req.params.id as string; // Type assertion
-  const [tenant] = await db
-    .select({
-      id: tenants.id,
-      rpmLimit: tenants.rpmLimit,
-      tpmLimit: tenants.tpmLimit,
-      priority: tenants.priority,
-      createdAt: tenants.createdAt,
-    })
-    .from(tenants)
-    .where(eq(tenants.id, id));
+  try {
+    const id = req.params.id as string;
+    const [tenant] = await db
+      .select({
+        id: tenants.id,
+        rpmLimit: tenants.rpmLimit,
+        tpmLimit: tenants.tpmLimit,
+        priority: tenants.priority,
+        createdAt: tenants.createdAt,
+      })
+      .from(tenants)
+      .where(eq(tenants.id, id));
 
-  if (!tenant) return res.status(404).json({ error: "Tenant not found" });
-  res.json(tenant);
+    if (!tenant) {
+      return res.status(404).json({ error: "Tenant not found" });
+    }
+    res.json(tenant);
+  } catch (err) {
+    console.error("[admin] GET /tenants/:id failed:", err);
+    res.status(500).json({ error: "Internal error fetching tenant" });
+  }
 });
 
 // PATCH /admin/tenants/:id
 adminRouter.patch("/tenants/:id", async (req: Request, res: Response) => {
-  const id = req.params.id as string;
-  const { rpm_limit, tpm_limit, priority } = req.body;
+  try {
+    const id = req.params.id as string;
+    const { rpm_limit, tpm_limit, priority } = req.body;
 
-  const [updated] = await db
-    .update(tenants)
-    .set({
-      ...(rpm_limit && { rpmLimit: rpm_limit }),
-      ...(tpm_limit && { tpmLimit: tpm_limit }),
-      ...(priority && { priority }),
-    })
-    .where(eq(tenants.id, id))
-    .returning();
+    const [updated] = await db
+      .update(tenants)
+      .set({
+        ...(rpm_limit && { rpmLimit: rpm_limit }),
+        ...(tpm_limit && { tpmLimit: tpm_limit }),
+        ...(priority && { priority }),
+      })
+      .where(eq(tenants.id, id))
+      .returning();
 
-  if (!updated) return res.status(404).json({ error: "Tenant not found" });
-  res.json(updated);
+    if (!updated) {
+      return res.status(404).json({ error: "Tenant not found" });
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error("[admin] PATCH /tenants/:id failed:", err);
+    res.status(500).json({ error: "Internal error updating tenant" });
+  }
 });
 
 // DELETE /admin/tenants/:id
 adminRouter.delete("/tenants/:id", async (req: Request, res: Response) => {
-  const id = req.params.id as string;
-  const [deleted] = await db
-    .delete(tenants)
-    .where(eq(tenants.id, id))
-    .returning();
+  try {
+    const id = req.params.id as string;
+    const [deleted] = await db
+      .delete(tenants)
+      .where(eq(tenants.id, id))
+      .returning();
 
-  if (!deleted) return res.status(404).json({ error: "Tenant not found" });
-  res.status(204).send();
+    if (!deleted) {
+      return res.status(404).json({ error: "Tenant not found" });
+    }
+    res.status(204).send();
+  } catch (err) {
+    console.error("[admin] DELETE /tenants/:id failed:", err);
+    res.status(500).json({ error: "Internal error deleting tenant" });
+  }
 });
