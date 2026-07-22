@@ -8,6 +8,8 @@ import { adminRouter } from "./routes/admin";
 import { tenantAuth } from "./middleware/tenantAuth";
 import { rateLimit } from "./middleware/rateLimit";
 import { chatQueue } from "./queue";
+import { getChatCompletion } from "./lib/provider";
+import "./worker";
 
 const app = express();
 app.use(cors());
@@ -76,13 +78,31 @@ app.post(
   rateLimit,
   async (req: Request, res: Response) => {
     console.log("[gateway] processing request for tenant:", req.tenant!.id);
-    res.status(200).json({
-      status: "stub",
-      note: "rate limit passed — real provider call lands in Stage 3",
-      tenantId: req.tenant!.id,
-    });
+    try {
+      const response = await getChatCompletion(req.body.messages);
+      res.status(200).json(response);
+    } catch (error) {
+      console.error("[gateway] provider call failed:", error);
+      res.status(500).json({ error: "Provider call failed" });
+    }
   },
 );
+
+app.get("/v1/chat/status/:jobId", async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+
+    const job = await chatQueue.getJob(id);
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    const state = await job.getState();
+    if (state === "completed")
+      return res.json({ status: "completed", result: job.returnvalue });
+    if (state === "failed") return res.json({ status: "failed" });
+    return res.json({ status: "waiting" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get status" });
+  }
+});
 
 app.use(express.static(path.join(__dirname, "../../client/dist")));
 app.get("*", (req, res) =>

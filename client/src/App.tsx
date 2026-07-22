@@ -169,18 +169,46 @@ function tryStringify(value: unknown): string {
 /* ------------------------------------------------------------------ */
 
 export default function App() {
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState(
+    "agw_0ea0e99c120104b29a814a8b0c8b8bd7fdae3142b585cf20",
+  );
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState<ResultState>({ kind: "idle" });
   const [showRaw, setShowRaw] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
+  useEffect(() => {
+    if (result.kind !== "queued") return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/v1/chat/status/${result.jobId}`);
+        const data = await res.json();
+        if (data.status === "completed") {
+          setResult({ kind: "success", status: 200, body: data.result });
+          clearInterval(interval);
+        } else if (data.status === "failed") {
+          setResult({
+            kind: "error",
+            status: 500,
+            message: "Queued job failed.",
+          });
+          clearInterval(interval);
+        }
+      } catch (e) {
+        /* ignore polling errors */
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [result.kind]);
+
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const canSubmit =
-    apiKey.trim().length > 0 &&
-    prompt.trim().length > 0 &&
-    result.kind !== "loading";
+  // const canSubmit =
+  //   apiKey.trim().length > 0 &&
+  //   prompt.trim().length > 0 &&
+  //   result.kind !== "loading";
+
+  const canSubmit = apiKey.trim().length > 0 && prompt.trim().length > 0;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -193,7 +221,7 @@ export default function App() {
     setResult({ kind: "loading" });
 
     try {
-      const res = await fetch("http://localhost:5000/v1/chat/completions", {
+      const res = await fetch("/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
