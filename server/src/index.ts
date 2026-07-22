@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { Queue } from "bullmq";
 import { connection } from "./queue";
+import { adminRouter } from "./routes/admin";
 
 const app = express();
 app.use(cors());
@@ -18,6 +19,8 @@ const videoQueue = new Queue("video-processing", { connection });
 app.get("/", (req: Request, res: Response) => {
   res.send("API is running");
 });
+
+app.use("/admin", adminRouter);
 
 // POST: Add job to queue
 app.post("/api/jobs", async (req: Request, res: Response) => {
