@@ -6,11 +6,22 @@ import { tenants } from "../db/schema";
 
 export const adminRouter = Router();
 
+console.log("[admin] Admin router initialized");
+
 function requireAdminAuth(req: Request, res: Response, next: () => void) {
+  console.log("[admin] Auth check - Headers:", req.headers);
   const secret = req.header("X-Admin-Secret");
+  console.log("[admin] Received secret:", secret ? "***" : "missing");
+  console.log(
+    "[admin] Expected secret:",
+    process.env.ADMIN_SECRET ? "***" : "missing",
+  );
+
   if (!secret || secret !== process.env.ADMIN_SECRET) {
+    console.log("[admin] Auth failed");
     return res.status(401).json({ error: "Unauthorized" });
   }
+  console.log("[admin] Auth passed");
   next();
 }
 adminRouter.use(requireAdminAuth);
@@ -23,20 +34,28 @@ function generateApiKey() {
 
 // POST /admin/tenants
 adminRouter.post("/tenants", async (req: Request, res: Response) => {
-  console.log("[admin] POST /tenants", req.body);
+  console.log("[admin] POST /tenants START - Body:", JSON.stringify(req.body));
   try {
     const { rpm_limit, tpm_limit, priority } = req.body;
+    console.log("[admin] Parsed values:", { rpm_limit, tpm_limit, priority });
+
     if (!rpm_limit || !tpm_limit) {
+      console.log("[admin] Missing required fields");
       return res
         .status(400)
         .json({ error: "rpm_limit and tpm_limit are required" });
     }
     if (priority && !["high", "medium", "low"].includes(priority)) {
+      console.log("[admin] Invalid priority:", priority);
       return res
         .status(400)
         .json({ error: "priority must be high, medium, or low" });
     }
+
+    console.log("[admin] Generating API key...");
     const { raw, hash } = generateApiKey();
+    console.log("[admin] API key generated, inserting into database...");
+
     const [tenant] = await db
       .insert(tenants)
       .values({
@@ -46,6 +65,8 @@ adminRouter.post("/tenants", async (req: Request, res: Response) => {
         priority: priority || "medium",
       })
       .returning();
+
+    console.log("[admin] Tenant created successfully:", tenant.id);
     res.status(201).json({
       id: tenant.id,
       apiKey: raw,
@@ -62,6 +83,7 @@ adminRouter.post("/tenants", async (req: Request, res: Response) => {
 
 // GET /admin/tenants
 adminRouter.get("/tenants", async (_req: Request, res: Response) => {
+  console.log("[admin] GET /tenants START");
   try {
     const rows = await db
       .select({
@@ -72,6 +94,7 @@ adminRouter.get("/tenants", async (_req: Request, res: Response) => {
         createdAt: tenants.createdAt,
       })
       .from(tenants);
+    console.log(`[admin] Retrieved ${rows.length} tenants`);
     res.json(rows);
   } catch (err) {
     console.error("[admin] GET /tenants failed:", err);
@@ -81,6 +104,7 @@ adminRouter.get("/tenants", async (_req: Request, res: Response) => {
 
 // GET /admin/tenants/:id
 adminRouter.get("/tenants/:id", async (req: Request, res: Response) => {
+  console.log("[admin] GET /tenants/:id START - ID:", req.params.id);
   try {
     const id = req.params.id as string;
     const [tenant] = await db
@@ -95,8 +119,10 @@ adminRouter.get("/tenants/:id", async (req: Request, res: Response) => {
       .where(eq(tenants.id, id));
 
     if (!tenant) {
+      console.log("[admin] Tenant not found:", id);
       return res.status(404).json({ error: "Tenant not found" });
     }
+    console.log("[admin] Tenant found:", tenant.id);
     res.json(tenant);
   } catch (err) {
     console.error("[admin] GET /tenants/:id failed:", err);
@@ -106,9 +132,11 @@ adminRouter.get("/tenants/:id", async (req: Request, res: Response) => {
 
 // PATCH /admin/tenants/:id
 adminRouter.patch("/tenants/:id", async (req: Request, res: Response) => {
+  console.log("[admin] PATCH /tenants/:id START - ID:", req.params.id);
   try {
     const id = req.params.id as string;
     const { rpm_limit, tpm_limit, priority } = req.body;
+    console.log("[admin] Update values:", { rpm_limit, tpm_limit, priority });
 
     const [updated] = await db
       .update(tenants)
@@ -118,11 +146,19 @@ adminRouter.patch("/tenants/:id", async (req: Request, res: Response) => {
         ...(priority && { priority }),
       })
       .where(eq(tenants.id, id))
-      .returning();
+      .returning({
+        id: tenants.id,
+        rpmLimit: tenants.rpmLimit,
+        tpmLimit: tenants.tpmLimit,
+        priority: tenants.priority,
+        createdAt: tenants.createdAt,
+      });
 
     if (!updated) {
+      console.log("[admin] Tenant not found for update:", id);
       return res.status(404).json({ error: "Tenant not found" });
     }
+    console.log("[admin] Tenant updated:", updated.id);
     res.json(updated);
   } catch (err) {
     console.error("[admin] PATCH /tenants/:id failed:", err);
@@ -132,6 +168,7 @@ adminRouter.patch("/tenants/:id", async (req: Request, res: Response) => {
 
 // DELETE /admin/tenants/:id
 adminRouter.delete("/tenants/:id", async (req: Request, res: Response) => {
+  console.log("[admin] DELETE /tenants/:id START - ID:", req.params.id);
   try {
     const id = req.params.id as string;
     const [deleted] = await db
@@ -140,8 +177,10 @@ adminRouter.delete("/tenants/:id", async (req: Request, res: Response) => {
       .returning();
 
     if (!deleted) {
+      console.log("[admin] Tenant not found for delete:", id);
       return res.status(404).json({ error: "Tenant not found" });
     }
+    console.log("[admin] Tenant deleted:", deleted.id);
     res.status(204).send();
   } catch (err) {
     console.error("[admin] DELETE /tenants/:id failed:", err);
