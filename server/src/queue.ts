@@ -10,7 +10,17 @@ export const videoQueue = new Queue("video-processing", {
   defaultJobOptions: {
     removeOnComplete: { count: 100 },
     removeOnFail: { count: 500 },
-    attempts: 3,
+    attempts: 1,
+    backoff: { type: "exponential", delay: 2000 },
+  },
+});
+
+export const chatQueue = new Queue("chat-completions", {
+  connection,
+  defaultJobOptions: {
+    removeOnComplete: { count: 500 },
+    removeOnFail: { count: 1000 },
+    attempts: 1,
     backoff: { type: "exponential", delay: 2000 },
   },
 });

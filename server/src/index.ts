@@ -5,6 +5,9 @@ import cors from "cors";
 import { Queue } from "bullmq";
 import { connection } from "./queue";
 import { adminRouter } from "./routes/admin";
+import { tenantAuth } from "./middleware/tenantAuth";
+import { rateLimit } from "./middleware/rateLimit";
+import { chatQueue } from "./queue";
 
 const app = express();
 app.use(cors());
@@ -66,6 +69,20 @@ app.get("/api/jobs/:id", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch job" });
   }
 });
+
+app.post(
+  "/v1/chat/completions",
+  tenantAuth,
+  rateLimit,
+  async (req: Request, res: Response) => {
+    console.log("[gateway] processing request for tenant:", req.tenant!.id);
+    res.status(200).json({
+      status: "stub",
+      note: "rate limit passed — real provider call lands in Stage 3",
+      tenantId: req.tenant!.id,
+    });
+  },
+);
 
 app.use(express.static(path.join(__dirname, "../../client/dist")));
 app.get("*", (req, res) =>
