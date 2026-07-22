@@ -1,4 +1,4 @@
-import { connection } from "../queue";
+import { connection } from "../queue.js";
 
 // Atomic check-and-consume token bucket.
 // KEYS[1] = bucket key
