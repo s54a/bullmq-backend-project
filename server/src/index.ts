@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "path";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { Queue } from "bullmq";
@@ -7,6 +8,9 @@ import { connection } from "./queue";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }));
+
+const __dirname = path.resolve();
 
 // We instantiate a Queue here to add jobs and check states
 const videoQueue = new Queue("video-processing", { connection });
@@ -60,7 +64,12 @@ app.get("/api/jobs/:id", async (req: Request, res: Response) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
+app.use(express.static(path.join(__dirname, "../../client/dist")));
+app.get("*", (req, res) =>
+  res.sendFile(path.join(__dirname, "../../client/dist/index.html")),
+);
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`API Server running on port ${PORT}`);
 });

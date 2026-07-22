@@ -16,7 +16,7 @@ function App() {
     setJobData(null);
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:3001/api/jobs", {
+      const res = await fetch("http://localhost:5000/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ videoName: "interview-demo.mp4" }),
@@ -35,7 +35,7 @@ function App() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/jobs/${jobId}`);
+        const res = await fetch(`http://localhost:5000/api/jobs/${jobId}`);
         const data = await res.json();
         setJobData(data);
 

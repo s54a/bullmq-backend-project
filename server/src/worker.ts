@@ -31,3 +31,9 @@ worker.on("failed", (job, err) => {
 });
 
 console.log("Worker is listening for jobs...");
+
+process.on("SIGTERM", async () => {
+  console.log("SIGTERM received, closing worker...");
+  await worker.close();
+  process.exit(0);
+});
