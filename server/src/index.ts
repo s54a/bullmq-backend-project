@@ -1,5 +1,6 @@
 import "dotenv/config";
 import path from "path";
+import { fileURLToPath } from "url";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { Queue } from "bullmq";
@@ -15,14 +16,15 @@ app.use(cors());
 app.use(express.json());
 app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }));
 
-const __dirname = path.resolve();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // We instantiate a Queue here to add jobs and check states
 const videoQueue = new Queue("video-processing", { connection });
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("API is running");
-});
+// app.get("/", (req: Request, res: Response) => {
+//   res.send("API is running");
+// });
 
 app.use("/admin", adminRouter);
 
