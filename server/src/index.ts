@@ -4,11 +4,10 @@ import { fileURLToPath } from "url";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { Queue } from "bullmq";
-import { connection } from "./queue.js";
+import { connection, chatQueue } from "./queue.js";
 import { adminRouter } from "./routes/admin.js";
 import { tenantAuth } from "./middleware/tenantAuth.js";
 import { rateLimit } from "./middleware/rateLimit.js";
-import { chatQueue } from "./queue.js";
 import { getChatCompletion } from "./lib/provider.js";
 import "./worker.js";
 
