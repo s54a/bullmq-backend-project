@@ -37,6 +37,69 @@ app.post(
   },
 );
 
+// A deterministic, authenticated demo batch for presentations. The first three
+// requests use the real provider path now; the remaining seven become real
+// BullMQ jobs with a visible 10-second delayed state before the worker handles
+// them. It is deliberately separate from the normal rate-limit middleware.
+app.post("/v1/demo/batch", tenantAuth, async (req: Request, res: Response) => {
+  const prompts: string[] = Array.isArray(req.body?.prompts)
+    ? req.body.prompts
+    : [];
+  if (prompts.length !== 10 || prompts.some((prompt) => typeof prompt !== "string")) {
+    return res.status(400).json({ error: "Exactly 10 string prompts are required" });
+  }
+
+  const tenant = req.tenant!;
+  const requests = await Promise.all(
+    prompts.slice(0, 3).map(async (prompt, index) => {
+      try {
+        const result = await getChatCompletion([{ role: "user", content: prompt }]);
+        return { id: index + 1, prompt, status: 200, state: "completed", result };
+      } catch (error) {
+        console.error("[demo-batch] immediate provider request failed:", error);
+        return {
+          id: index + 1,
+          prompt,
+          status: 500,
+          state: "failed",
+          error: "Provider call failed",
+        };
+      }
+    }),
+  );
+
+  const queued = await Promise.all(
+    prompts.slice(3).map(async (prompt, index) => {
+      const job = await chatQueue.add(
+        "chatCompletion",
+        {
+          tenantId: tenant.id,
+          body: { messages: [{ role: "user", content: prompt }] },
+          estimatedTokens: Math.max(1, Math.ceil(prompt.length / 4)),
+          queuedAt: new Date().toISOString(),
+        },
+        {
+          delay: 10_000,
+          priority: tenant.priority === "high" ? 1 : tenant.priority === "medium" ? 2 : 3,
+        },
+      );
+      return {
+        id: index + 4,
+        prompt,
+        status: 202,
+        state: "delayed",
+        jobId: job.id,
+      };
+    }),
+  );
+
+  res.status(200).json({
+    acceptedAt: new Date().toISOString(),
+    delayedForSeconds: 10,
+    requests: [...requests, ...queued],
+  });
+});
+
 app.get("/v1/chat/status/:jobId", async (req: Request, res: Response) => {
   try {
     const id = req.params.jobId as string;
@@ -47,6 +110,8 @@ app.get("/v1/chat/status/:jobId", async (req: Request, res: Response) => {
     if (state === "completed")
       return res.json({ status: "completed", result: job.returnvalue });
     if (state === "failed") return res.json({ status: "failed" });
+    if (state === "delayed") return res.json({ status: "delayed" });
+    if (state === "active") return res.json({ status: "active" });
     return res.json({ status: "waiting" });
   } catch (err) {
     res.status(500).json({ error: "Failed to get status" });
