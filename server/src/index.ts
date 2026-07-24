@@ -8,6 +8,8 @@ import { adminRouter } from "./routes/admin.js";
 import { tenantAuth } from "./middleware/tenantAuth.js";
 import { rateLimit } from "./middleware/rateLimit.js";
 import { getChatCompletion } from "./lib/provider.js";
+import { db } from "./db/client.js";
+import { tenants } from "./db/schema.js";
 import "./worker.js";
 
 const app = express();
@@ -48,6 +50,47 @@ app.get("/v1/chat/status/:jobId", async (req: Request, res: Response) => {
     return res.json({ status: "waiting" });
   } catch (err) {
     res.status(500).json({ error: "Failed to get status" });
+  }
+});
+
+// Deliberately read-only public view for the product demo. It exposes no API
+// keys or mutation actions, so the frontend never needs an administrator secret.
+app.get("/demo/dashboard", async (_req: Request, res: Response) => {
+  try {
+    const counts = await chatQueue.getJobCounts(
+      "waiting",
+      "active",
+      "completed",
+      "failed",
+      "delayed",
+    );
+    const waitingJobs = await chatQueue.getJobs(["waiting", "delayed"], 0, 200);
+    const queuedByTenant: Record<string, number> = {};
+    for (const job of waitingJobs) {
+      const tenantId = job.data?.tenantId ?? "unknown";
+      queuedByTenant[tenantId] = (queuedByTenant[tenantId] ?? 0) + 1;
+    }
+    const tenantRows = await db
+      .select({
+        id: tenants.id,
+        rpmLimit: tenants.rpmLimit,
+        tpmLimit: tenants.tpmLimit,
+        priority: tenants.priority,
+        createdAt: tenants.createdAt,
+      })
+      .from(tenants);
+    res.json({
+      tenants: tenantRows,
+      metrics: {
+        queue: counts,
+        queuedByTenant,
+        timestamp: new Date().toISOString(),
+        health: { gateway: "Available", redis: "Connected" },
+      },
+    });
+  } catch (error) {
+    console.error("[demo] GET /demo/dashboard failed:", error);
+    res.status(503).json({ error: "Demo metrics are temporarily unavailable" });
   }
 });
 

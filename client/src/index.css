@@ -3,8 +3,6 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-@custom-variant dark (&:is(.dark *));
-
 button {
   cursor: pointer;
 }
@@ -16,11 +14,9 @@ button:disabled {
 ::-webkit-scrollbar {
   width: 8px;
 }
-::-webkit-scrollbar-track {
-  background: #1e1e1e;
-}
+::-webkit-scrollbar-track { background: #f4f4f5; }
 ::-webkit-scrollbar-thumb {
-  background: #555;
+  background: #a1a1aa;
   border-radius: 4px;
 }
 
@@ -74,7 +70,7 @@ button:disabled {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.546 0.245 262.881);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
