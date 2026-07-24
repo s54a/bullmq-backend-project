@@ -136,7 +136,9 @@ function tryStringify(value: unknown): string {
 }
 
 export default function Playground() {
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState(
+    "agw_0ea0e99c120104b29a814a8b0c8b8bd7fdae3142b585cf20",
+  );
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState<ResultState>({ kind: "idle" });
   const [showRaw, setShowRaw] = useState(false);
