@@ -27,18 +27,19 @@ const demoKey = "agw_0ea0e99c120104b29a814a8b0c8b8bd7fdae3142b585cf20";
 
 export default function Playground() {
   const [apiKey, setApiKey] = useState("");
-
-  const [previousKey, setPreviousKey] = useState<string | null>(null);
+  const [previousKey, setPreviousKey] = useState<string>("");
   const [prompt, setPrompt] = useState(examples[0]);
   const [result, setResult] = useState<Result>({ kind: "idle" });
   const [showRaw, setShowRaw] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
+  const isDemoKeyActive = !!demoKey && apiKey.trim() === demoKey.trim();
+
   function toggleDemoKey() {
     if (!demoKey) return;
-    if (apiKey.trim() === demoKey) {
-      if (previousKey) setApiKey(previousKey);
-      setPreviousKey(null);
+    if (isDemoKeyActive) {
+      setApiKey(previousKey);
+      setPreviousKey("");
     } else {
       setPreviousKey(apiKey);
       setApiKey(demoKey);
@@ -163,9 +164,7 @@ export default function Playground() {
               </div>
               {demoKey && (
                 <Button variant="outline" size="sm" onClick={toggleDemoKey}>
-                  {apiKey.trim() === demoKey
-                    ? "Clear demo key"
-                    : "Use demo tenant"}
+                  {isDemoKeyActive ? "Clear demo key" : "Use demo tenant"}
                 </Button>
               )}
             </div>
