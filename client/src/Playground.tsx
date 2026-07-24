@@ -316,9 +316,10 @@ function Response({
               <Raw data={result.body} show={showRaw} setShow={setShowRaw} />
             </div>
           )}
-          {isError && (
+          {result.kind === "error" && (
             <div className="rounded-lg border border-red-200 bg-red-50 p-5">
               <p className="font-semibold text-red-950">{result.message}</p>
+
               {result.body && (
                 <Raw data={result.body} show={showRaw} setShow={setShowRaw} />
               )}
@@ -355,7 +356,7 @@ function Raw({
       </button>
       {show && (
         <pre className="mt-3 max-h-56 overflow-auto rounded bg-white/70 p-3 text-xs leading-5 text-zinc-800">
-          {JSON.stringify(data, null, 2)}
+          {JSON.stringify(data, null, 2) ?? ""}
         </pre>
       )}
     </div>
