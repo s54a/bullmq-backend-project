@@ -23,16 +23,27 @@ const examples = [
   "Write a friendly status update for a queued AI request.",
   "Explain token budgets to a SaaS customer.",
 ];
-const demoKey = import.meta.env.VITE_DEMO_TENANT_KEY as string | undefined;
+const demoKey = "agw_0ea0e99c120104b29a814a8b0c8b8bd7fdae3142b585cf20";
 
 export default function Playground() {
-  const [apiKey, setApiKey] = useState(
-    "agw_0ea0e99c120104b29a814a8b0c8b8bd7fdae3142b585cf20",
-  );
+  const [apiKey, setApiKey] = useState("");
+
+  const [previousKey, setPreviousKey] = useState<string | null>(null);
   const [prompt, setPrompt] = useState(examples[0]);
   const [result, setResult] = useState<Result>({ kind: "idle" });
   const [showRaw, setShowRaw] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  function toggleDemoKey() {
+    if (!demoKey) return;
+    if (apiKey.trim() === demoKey) {
+      if (previousKey) setApiKey(previousKey);
+      setPreviousKey(null);
+    } else {
+      setPreviousKey(apiKey);
+      setApiKey(demoKey);
+    }
+  }
 
   useEffect(() => {
     if (result.kind !== "queued") return;
@@ -151,12 +162,10 @@ export default function Playground() {
                 </p>
               </div>
               {demoKey && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setApiKey(demoKey)}
-                >
-                  Use demo tenant
+                <Button variant="outline" size="sm" onClick={toggleDemoKey}>
+                  {apiKey.trim() === demoKey
+                    ? "Clear demo key"
+                    : "Use demo tenant"}
                 </Button>
               )}
             </div>

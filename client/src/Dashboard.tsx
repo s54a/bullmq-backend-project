@@ -28,6 +28,8 @@ type Metrics = {
 type Session = { kind: "admin"; secret: string } | { kind: "demo" };
 type Snapshot = { at: number; waiting: number; active: number };
 const SESSION_KEY = "aegis-dashboard-session";
+const DEMO_SECRET =
+  "Ih5zfa3XaibYrs9uQWv5x6cfnWXOTOfoSgXceL8PvWSIW9kRVZHhXPKK8r9EQQfnKEdkr40Be2kHODyxu94TPQ";
 
 export default function Dashboard() {
   const [session, setSession] = useState<Session | null>(() => {
@@ -39,9 +41,7 @@ export default function Dashboard() {
       return null;
     }
   });
-  const [secret, setSecret] = useState(
-    "Ih5zfa3XaibYrs9uQWv5x6cfnWXOTOfoSgXceL8PvWSIW9kRVZHhXPKK8r9EQQfnKEdkr40Be2kHODyxu94TPQ",
-  );
+  const [secret, setSecret] = useState("");
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
@@ -113,12 +113,13 @@ export default function Dashboard() {
     return () => window.clearInterval(timer);
   }, [session, paused, load]);
 
-  async function authenticate(kind: Session["kind"]) {
+  async function authenticate(kind: Session["kind"], overrideSecret?: string) {
+    const currentSecret = (overrideSecret ?? secret).trim();
     const next =
       kind === "demo"
         ? ({ kind } as Session)
-        : ({ kind, secret: secret.trim() } as Session);
-    if (kind === "admin" && !secret.trim()) {
+        : ({ kind, secret: currentSecret } as Session);
+    if (kind === "admin" && !currentSecret) {
       setError("Enter your admin secret to continue.");
       return;
     }
@@ -145,7 +146,10 @@ export default function Dashboard() {
         error={error}
         loading={loading}
         onAdmin={() => void authenticate("admin")}
-        onDemo={() => void authenticate("demo")}
+        onDemo={() => {
+          setSecret(DEMO_SECRET);
+          void authenticate("admin", DEMO_SECRET);
+        }}
       />
     );
 
