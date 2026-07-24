@@ -26,7 +26,9 @@ const examples = [
 const demoKey = import.meta.env.VITE_DEMO_TENANT_KEY as string | undefined;
 
 export default function Playground() {
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState(
+    "agw_0ea0e99c120104b29a814a8b0c8b8bd7fdae3142b585cf20",
+  );
   const [prompt, setPrompt] = useState(examples[0]);
   const [result, setResult] = useState<Result>({ kind: "idle" });
   const [showRaw, setShowRaw] = useState(false);
