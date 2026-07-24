@@ -25,7 +25,7 @@ export async function tenantAuth(
   next: NextFunction,
 ) {
   const key = req.header("X-Gateway-Key");
-  console.log("[gateway] tenantAuth - key present:", !!key);
+  // console.log("[gateway] tenantAuth - key present:", !!key);
 
   if (!key) {
     return res.status(401).json({ error: "X-Gateway-Key header required" });
@@ -45,12 +45,12 @@ export async function tenantAuth(
       .where(eq(tenants.apiKeyHash, hash));
 
     if (!tenant) {
-      console.log("[gateway] tenantAuth - no match for key hash");
+      // console.log("[gateway] tenantAuth - no match for key hash");
       return res.status(401).json({ error: "Invalid API key" });
     }
 
     req.tenant = tenant;
-    console.log("[gateway] tenantAuth - resolved tenant:", tenant.id);
+    // console.log("[gateway] tenantAuth - resolved tenant:", tenant.id);
     next();
   } catch (err) {
     console.error("[gateway] tenantAuth failed:", err);

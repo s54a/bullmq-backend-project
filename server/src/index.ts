@@ -24,7 +24,7 @@ app.post(
   tenantAuth,
   rateLimit,
   async (req: Request, res: Response) => {
-    console.log("[gateway] processing request for tenant:", req.tenant!.id);
+    // console.log("[gateway] processing request for tenant:", req.tenant!.id);
     try {
       const response = await getChatCompletion(req.body.messages);
       res.status(200).json(response);

@@ -36,12 +36,12 @@ export async function rateLimit(
     estimatedTokens,
   );
 
-  console.log("[gateway] rateLimit", {
-    tenant: tenant.id,
-    rpmAllowed: rpmResult.allowed,
-    tpmAllowed: tpmResult.allowed,
-    estimatedTokens,
-  });
+  // console.log("[gateway] rateLimit", {
+  //   tenant: tenant.id,
+  //   rpmAllowed: rpmResult.allowed,
+  //   tpmAllowed: tpmResult.allowed,
+  //   estimatedTokens,
+  // });
 
   if (rpmResult.allowed && tpmResult.allowed) {
     return next();
