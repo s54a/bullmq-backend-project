@@ -1,17 +1,162 @@
 import { CheckCircle2, FlaskConical, Info, ShieldAlert } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-const tenants = [{ name: "Tenant A", total: 3575, className: "bg-blue-600" }, { name: "Tenant B", total: 3575, className: "bg-sky-500" }, { name: "Tenant C", total: 3431, className: "bg-indigo-400" }];
+const tenants = [
+  { name: "Tenant A", total: 3575, className: "bg-zinc-800" },
+  { name: "Tenant B", total: 3575, className: "bg-sky-500" },
+  { name: "Tenant C", total: 3431, className: "bg-indigo-400" },
+];
 
 export default function Reliability() {
-  const max = Math.max(...tenants.map(t => t.total));
-  return <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-    <div className="max-w-3xl"><p className="text-sm font-semibold text-blue-600">RELIABILITY EVIDENCE</p><h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Load-tested at the gateway, with the limits stated plainly.</h1><p className="mt-5 text-lg leading-8 text-zinc-600">This test measured acceptance at Aegis under a staged, three-tenant load profile. It shows how the gateway responds; it is not a lifetime queue-completion audit.</p></div>
-    <section className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 sm:grid-cols-4">{[["10,581", "total iterations"], ["50", "maximum virtual users"], ["2 minutes", "test duration"], ["256.72 ms", "p95 acceptance latency"]].map(([number, label]) => <div key={label} className="bg-white p-6"><p className="text-2xl font-semibold tracking-tight">{number}</p><p className="mt-1 text-sm text-zinc-500">{label}</p></div>)}</section>
-    <section className="mt-12 grid gap-5 lg:grid-cols-2"><Card className="border-zinc-200 shadow-none"><CardContent className="p-7"><div className="flex items-center gap-2"><FlaskConical className="size-4 text-blue-600" /><h2 className="font-semibold">Tenant fairness distribution</h2></div><p className="mt-2 text-sm text-zinc-500">Accepted outcomes per tenant from the controlled run.</p><div className="mt-8 space-y-5">{tenants.map(t => <div key={t.name}><div className="mb-2 flex justify-between text-sm"><span className="font-medium">{t.name}</span><span className="text-zinc-500">{t.total.toLocaleString()}</span></div><div className="h-3 overflow-hidden rounded-full bg-zinc-100"><div className={`h-full rounded-full ${t.className}`} style={{ width: `${(t.total / max) * 100}%` }} /></div></div>)}</div></CardContent></Card>
-      <Card className="border-zinc-200 shadow-none"><CardContent className="p-7"><div className="flex items-center gap-2"><CheckCircle2 className="size-4 text-emerald-600" /><h2 className="font-semibold">Gateway response outcomes</h2></div><p className="mt-2 text-sm text-zinc-500">A 200 response was immediate; 202 means the gateway accepted asynchronous work.</p><div className="mt-9 flex h-8 overflow-hidden rounded-md"><div className="min-w-1 bg-emerald-500" style={{ width: "0.16%" }} /><div className="bg-amber-400" style={{ width: "99.84%" }} /></div><div className="mt-5 grid grid-cols-3 gap-3 text-sm"><Outcome label="Immediate 200" value="17" color="bg-emerald-500" /><Outcome label="Queued 202" value="10,564" color="bg-amber-400" /><Outcome label="Other" value="0" color="bg-zinc-300" /></div></CardContent></Card></section>
-    <section className="mt-5 grid gap-5 lg:grid-cols-3"><Card className="border-zinc-200 shadow-none lg:col-span-2"><CardContent className="p-7"><div className="flex gap-3"><Info className="mt-0.5 size-5 shrink-0 text-blue-600" /><div><h2 className="font-semibold">Methodology</h2><p className="mt-2 text-sm leading-6 text-zinc-600">Grafana k6 sent requests from three tenants through a 30-second ramp to 10 VUs, a 60-second stage to 50 VUs, then a 30-second ramp down. The status-code metrics capture gateway responses only. Token use is estimated from request-body size, not model-token accounting.</p></div></div></CardContent></Card><Card className="border-zinc-200 shadow-none"><CardContent className="p-7"><h2 className="font-semibold">What this proves</h2><p className="mt-2 text-sm leading-6 text-zinc-600">No non-200/non-202 responses occurred at the gateway under this profile, with a near-even distribution across tenants.</p></CardContent></Card><Card className="border-amber-200 bg-amber-50 shadow-none lg:col-span-3"><CardContent className="flex gap-3 p-6"><ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-700" /><div><h2 className="font-semibold text-amber-950">Next validation</h2><p className="mt-1 text-sm leading-6 text-amber-900">Confirm queued-job completion and uniqueness after a controlled run, simulate provider failure, re-check queued rate limits in the worker, and test at 100+ VUs.</p></div></CardContent></Card></section>
-  </div>;
+  const max = Math.max(...tenants.map((t) => t.total));
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+      <div className="max-w-3xl">
+        <p className="text-sm font-semibold text-blue-600">
+          RELIABILITY EVIDENCE
+        </p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+          Load-tested at the gateway, with the limits stated plainly.
+        </h1>
+        <p className="mt-5 text-lg leading-8 text-zinc-600">
+          This test measured acceptance at Aegis under a staged, three-tenant
+          load profile. It shows how the gateway responds; it is not a lifetime
+          queue-completion audit.
+        </p>
+      </div>
+      <section className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 sm:grid-cols-4">
+        {[
+          ["10,581", "total iterations"],
+          ["50", "maximum virtual users"],
+          ["2 minutes", "test duration"],
+          ["256.72 ms", "p95 acceptance latency"],
+        ].map(([number, label]) => (
+          <div key={label} className="bg-white p-6">
+            <p className="text-2xl font-semibold tracking-tight">{number}</p>
+            <p className="mt-1 text-sm text-zinc-500">{label}</p>
+          </div>
+        ))}
+      </section>
+      <section className="mt-12 grid gap-5 lg:grid-cols-2">
+        <Card className="border-zinc-200 shadow-none">
+          <CardContent className="p-7">
+            <div className="flex items-center gap-2">
+              <FlaskConical className="size-4 text-blue-600" />
+              <h2 className="font-semibold">Tenant fairness distribution</h2>
+            </div>
+            <p className="mt-2 text-sm text-zinc-500">
+              Accepted outcomes per tenant from the controlled run.
+            </p>
+            <div className="mt-8 space-y-5">
+              {tenants.map((t) => (
+                <div key={t.name}>
+                  <div className="mb-2 flex justify-between text-sm">
+                    <span className="font-medium">{t.name}</span>
+                    <span className="text-zinc-500">
+                      {t.total.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded-full bg-zinc-100">
+                    <div
+                      className={`h-full rounded-full ${t.className}`}
+                      style={{ width: `${(t.total / max) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-zinc-200 shadow-none">
+          <CardContent className="p-7">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="size-4 text-emerald-600" />
+              <h2 className="font-semibold">Gateway response outcomes</h2>
+            </div>
+            <p className="mt-2 text-sm text-zinc-500">
+              A 200 response was immediate; 202 means the gateway accepted
+              asynchronous work.
+            </p>
+            <div className="mt-9 flex h-8 overflow-hidden rounded-md">
+              <div
+                className="min-w-1 bg-emerald-500"
+                style={{ width: "0.16%" }}
+              />
+              <div className="bg-amber-400" style={{ width: "99.84%" }} />
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
+              <Outcome
+                label="Immediate 200"
+                value="17"
+                color="bg-emerald-500"
+              />
+              <Outcome label="Queued 202" value="10,564" color="bg-amber-400" />
+              <Outcome label="Other" value="0" color="bg-zinc-300" />
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+      <section className="mt-5 grid gap-5 lg:grid-cols-3">
+        <Card className="border-zinc-200 shadow-none lg:col-span-2">
+          <CardContent className="p-7">
+            <div className="flex gap-3">
+              <Info className="mt-0.5 size-5 shrink-0 text-blue-600" />
+              <div>
+                <h2 className="font-semibold">Methodology</h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  Grafana k6 sent requests from three tenants through a
+                  30-second ramp to 10 VUs, a 60-second stage to 50 VUs, then a
+                  30-second ramp down. The status-code metrics capture gateway
+                  responses only. Token use is estimated from request-body size,
+                  not model-token accounting.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-zinc-200 shadow-none">
+          <CardContent className="p-7">
+            <h2 className="font-semibold">What this proves</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              No non-200/non-202 responses occurred at the gateway under this
+              profile, with a near-even distribution across tenants.
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-amber-200 bg-amber-50 shadow-none lg:col-span-3">
+          <CardContent className="flex gap-3 p-6">
+            <ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-700" />
+            <div>
+              <h2 className="font-semibold text-amber-950">Next validation</h2>
+              <p className="mt-1 text-sm leading-6 text-amber-900">
+                Confirm queued-job completion and uniqueness after a controlled
+                run, simulate provider failure, re-check queued rate limits in
+                the worker, and test at 100+ VUs.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+    </div>
+  );
 }
 
-function Outcome({ label, value, color }: { label: string; value: string; color: string }) { return <div><div className="flex items-center gap-2 text-zinc-500"><span className={`size-2 rounded-full ${color}`} />{label}</div><p className="mt-1 font-semibold text-zinc-950">{value}</p></div>; }
+function Outcome({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string;
+  color: string;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 text-zinc-500">
+        <span className={`size-2 rounded-full ${color}`} />
+        {label}
+      </div>
+      <p className="mt-1 font-semibold text-zinc-950">{value}</p>
+    </div>
+  );
+}

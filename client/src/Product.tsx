@@ -1,20 +1,149 @@
-import { ArrowRight, Check, Database, Gauge, KeyRound, Route, ServerCog } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Database,
+  Gauge,
+  KeyRound,
+  Route,
+  ServerCog,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 
 const lifecycle = [
-  [KeyRound, "Identify the tenant", "An X-Gateway-Key is hashed and resolved to a tenant record in Postgres."],
-  [Gauge, "Check two budgets", "Redis-backed atomic token buckets evaluate request-per-minute and estimated token-per-minute budgets."],
-  [Route, "Route traffic now", "Requests under both limits go to the configured provider path."],
-  [Database, "Accept bursts safely", "Over-limit requests return 202 Accepted and a job ID that clients can poll."],
-  [ServerCog, "Process by priority", "BullMQ prioritises high, medium, and low tenant work in the background queue."],
+  [
+    KeyRound,
+    "Identify the tenant",
+    "An X-Gateway-Key is hashed and resolved to a tenant record in Postgres.",
+  ],
+  [
+    Gauge,
+    "Check two budgets",
+    "Redis-backed atomic token buckets evaluate request-per-minute and estimated token-per-minute budgets.",
+  ],
+  [
+    Route,
+    "Route traffic now",
+    "Requests under both limits go to the configured provider path.",
+  ],
+  [
+    Database,
+    "Accept bursts safely",
+    "Over-limit requests return 202 Accepted and a job ID that clients can poll.",
+  ],
+  [
+    ServerCog,
+    "Process by priority",
+    "BullMQ prioritises high, medium, and low tenant work in the background queue.",
+  ],
 ];
 
 export default function Product() {
-  return <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-    <div className="max-w-3xl"><p className="text-sm font-semibold text-blue-600">THE PRODUCT</p><h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Reliability infrastructure for the AI features your customers rely on.</h1><p className="mt-5 text-lg leading-8 text-zinc-600">Aegis turns a shared provider limit into isolated tenant budgets, asynchronous burst handling, and provider failover.</p></div>
-    <section className="mt-18 grid gap-8 border-y border-zinc-200 py-12 lg:grid-cols-[.8fr_1.2fr]"><div><p className="text-sm font-semibold text-blue-600">THE PROBLEM</p><h2 className="mt-3 text-3xl font-semibold tracking-tight">One tenant’s burst should not degrade everyone.</h2><p className="mt-4 leading-7 text-zinc-600">Model providers give your product a shared capacity envelope. Without a fairness layer, a noisy customer can consume it and turn another customer’s normal request into a failure.</p></div><div className="rounded-xl border border-blue-100 bg-blue-50 p-6 text-blue-950"><p className="font-medium">Aegis creates a usage lane for each tenant.</p><ul className="mt-4 space-y-3 text-sm leading-6">{["Independent request and estimated-token budgets", "Priority-aware scheduling when work is queued", "A polling lifecycle for work accepted asynchronously"].map(item => <li className="flex gap-2" key={item}><Check className="mt-0.5 size-4 shrink-0 text-blue-600" />{item}</li>)}</ul></div></section>
-    <section className="py-16"><p className="text-sm font-semibold text-blue-600">REQUEST LIFECYCLE</p><h2 className="mt-3 text-3xl font-semibold tracking-tight">One endpoint, a controlled experience.</h2><div className="mt-8 grid gap-3 md:grid-cols-5">{lifecycle.map(([Icon, title, text], index) => <Card key={title as string} className="border-zinc-200 shadow-none"><CardContent className="p-5"><div className="flex items-center justify-between"><span className="flex size-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600"><Icon className="size-4" /></span><span className="text-xs font-medium text-zinc-400">0{index + 1}</span></div><h3 className="mt-5 font-semibold">{title as string}</h3><p className="mt-2 text-sm leading-6 text-zinc-600">{text as string}</p></CardContent></Card>)}</div></section>
-    <section className="grid gap-4 md:grid-cols-2"><Card className="border-zinc-200 shadow-none"><CardContent className="p-7"><p className="text-sm font-semibold text-blue-600">PROVIDER RESILIENCE</p><h2 className="mt-3 text-2xl font-semibold">Groq primary. OpenAI fallback.</h2><p className="mt-3 leading-7 text-zinc-600">The gateway uses Groq as its primary provider and falls back to OpenAI when the primary call fails or the circuit breaker is open. The implementation uses a 10-second provider timeout.</p></CardContent></Card><Card className="border-zinc-200 shadow-none"><CardContent className="p-7"><p className="text-sm font-semibold text-blue-600">ADMIN CONTROL PLANE</p><h2 className="mt-3 text-2xl font-semibold">See the work, then tune the lanes.</h2><p className="mt-3 leading-7 text-zinc-600">Administrators can provision tenants, configure RPM/TPM limits and priority, and inspect current queue counts by tenant.</p><Link to="/dashboard" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-700">Open control plane <ArrowRight className="size-4" /></Link></CardContent></Card></section>
-  </div>;
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+      <div className="max-w-3xl">
+        <p className="text-sm font-semibold text-blue-600">THE PRODUCT</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+          Reliability infrastructure for the AI features your customers rely on.
+        </h1>
+        <p className="mt-5 text-lg leading-8 text-zinc-600">
+          Aegis turns a shared provider limit into isolated tenant budgets,
+          asynchronous burst handling, and provider failover.
+        </p>
+      </div>
+      <section className="mt-18 grid gap-8 border-y border-zinc-200 py-12 lg:grid-cols-[.8fr_1.2fr]">
+        <div>
+          <p className="text-sm font-semibold text-blue-600">THE PROBLEM</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+            One tenant’s burst should not degrade everyone.
+          </h2>
+          <p className="mt-4 leading-7 text-zinc-600">
+            Model providers give your product a shared capacity envelope.
+            Without a fairness layer, a noisy customer can consume it and turn
+            another customer’s normal request into a failure.
+          </p>
+        </div>
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 text-blue-950">
+          <p className="font-medium">
+            Aegis creates a usage lane for each tenant.
+          </p>
+          <ul className="mt-4 space-y-3 text-sm leading-6">
+            {[
+              "Independent request and estimated-token budgets",
+              "Priority-aware scheduling when work is queued",
+              "A polling lifecycle for work accepted asynchronously",
+            ].map((item) => (
+              <li className="flex gap-2" key={item}>
+                <Check className="mt-0.5 size-4 shrink-0 text-blue-600" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+      <section className="py-16">
+        <p className="text-sm font-semibold text-blue-600">REQUEST LIFECYCLE</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+          One endpoint, a controlled experience.
+        </h2>
+        <div className="mt-8 grid gap-3 md:grid-cols-5">
+          {lifecycle.map(([Icon, title, text], index) => (
+            <Card key={title as string} className="border-zinc-200 shadow-none">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="flex size-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="text-xs font-medium text-zinc-400">
+                    0{index + 1}
+                  </span>
+                </div>
+                <h3 className="mt-5 font-semibold">{title as string}</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  {text as string}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+      <section className="grid gap-4 md:grid-cols-2">
+        <Card className="border-zinc-200 shadow-none">
+          <CardContent className="p-7">
+            <p className="text-sm font-semibold text-blue-600">
+              PROVIDER RESILIENCE
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold">
+              Groq primary. OpenAI fallback.
+            </h2>
+            <p className="mt-3 leading-7 text-zinc-600">
+              The gateway uses Groq as its primary provider and falls back to
+              OpenAI when the primary call fails or the circuit breaker is open.
+              The implementation uses a 10-second provider timeout.
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-zinc-200 shadow-none">
+          <CardContent className="p-7">
+            <p className="text-sm font-semibold text-blue-600">
+              ADMIN CONTROL PLANE
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold">
+              See the work, then tune the lanes.
+            </h2>
+            <p className="mt-3 leading-7 text-zinc-600">
+              Administrators can provision tenants, configure RPM/TPM limits and
+              priority, and inspect current queue counts by tenant.
+            </p>
+            <Link
+              to="/dashboard"
+              className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-700"
+            >
+              Open control plane <ArrowRight className="size-4" />
+            </Link>
+          </CardContent>
+        </Card>
+      </section>
+    </div>
+  );
 }
