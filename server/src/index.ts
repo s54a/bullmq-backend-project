@@ -45,16 +45,29 @@ app.post("/v1/demo/batch", tenantAuth, async (req: Request, res: Response) => {
   const prompts: string[] = Array.isArray(req.body?.prompts)
     ? req.body.prompts
     : [];
-  if (prompts.length !== 10 || prompts.some((prompt) => typeof prompt !== "string")) {
-    return res.status(400).json({ error: "Exactly 10 string prompts are required" });
+  if (
+    prompts.length !== 10 ||
+    prompts.some((prompt) => typeof prompt !== "string")
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Exactly 10 string prompts are required" });
   }
 
   const tenant = req.tenant!;
   const requests = await Promise.all(
     prompts.slice(0, 3).map(async (prompt, index) => {
       try {
-        const result = await getChatCompletion([{ role: "user", content: prompt }]);
-        return { id: index + 1, prompt, status: 200, state: "completed", result };
+        const result = await getChatCompletion([
+          { role: "user", content: prompt },
+        ]);
+        return {
+          id: index + 1,
+          prompt,
+          status: 200,
+          state: "completed",
+          result,
+        };
       } catch (error) {
         console.error("[demo-batch] immediate provider request failed:", error);
         return {
@@ -80,7 +93,12 @@ app.post("/v1/demo/batch", tenantAuth, async (req: Request, res: Response) => {
         },
         {
           delay: 10_000,
-          priority: tenant.priority === "high" ? 1 : tenant.priority === "medium" ? 2 : 3,
+          priority:
+            tenant.priority === "high"
+              ? 1
+              : tenant.priority === "medium"
+                ? 2
+                : 3,
         },
       );
       return {
