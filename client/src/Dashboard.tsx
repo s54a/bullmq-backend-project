@@ -31,6 +31,51 @@ const SESSION_KEY = "aegis-dashboard-session";
 const DEMO_SECRET =
   "Ih5zfa3XaibYrs9uQWv5x6cfnWXOTOfoSgXceL8PvWSIW9kRVZHhXPKK8r9EQQfnKEdkr40Be2kHODyxu94TPQ";
 
+const DEMO_TENANTS: Tenant[] = [
+  {
+    id: "t_9f2a1c8e4b3d7f60",
+    rpmLimit: 120,
+    tpmLimit: 60000,
+    priority: "high",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "t_1e7b4d2f9a8c3e05",
+    rpmLimit: 60,
+    tpmLimit: 30000,
+    priority: "medium",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "t_4a6c9f1d2b8e7031",
+    rpmLimit: 30,
+    tpmLimit: 15000,
+    priority: "low",
+    createdAt: new Date().toISOString(),
+  },
+];
+
+function makeDemoMetrics(tick: number): Metrics {
+  const wave = (base: number, amp: number) =>
+    Math.max(0, Math.round(base + amp * Math.sin(tick / 3)));
+  return {
+    queue: {
+      waiting: wave(4, 3),
+      active: wave(2, 2),
+      completed: 180 + tick * 3,
+      failed: 3,
+      delayed: wave(1, 1),
+    },
+    queuedByTenant: {
+      [DEMO_TENANTS[0].id]: wave(2, 2),
+      [DEMO_TENANTS[1].id]: wave(1, 1),
+      [DEMO_TENANTS[2].id]: 0,
+    },
+    timestamp: new Date().toISOString(),
+    health: { gateway: "Connected", redis: "Connected" },
+  };
+}
+
 export default function Dashboard() {
   const [session, setSession] = useState<Session | null>(() => {
     const value = sessionStorage.getItem(SESSION_KEY);
@@ -54,28 +99,33 @@ export default function Dashboard() {
       if (!activeSession) return false;
       setLoading(true);
       try {
-        const isDemo = activeSession.kind === "demo";
-        const headers = isDemo
-          ? undefined
-          : { "X-Admin-Secret": activeSession.secret };
-        const [tenantResponse, metricResponse] = await Promise.all(
-          isDemo
-            ? [fetch("/demo/dashboard"), fetch("/demo/dashboard")]
-            : [
-                fetch("/admin/tenants", { headers }),
-                fetch("/admin/metrics/health", { headers }),
-              ],
-        );
+        if (activeSession.kind === "demo") {
+          setTenants(DEMO_TENANTS);
+          setSnapshots((current) => {
+            const tick = current.length;
+            const nextMetrics = makeDemoMetrics(tick);
+            setMetrics(nextMetrics);
+            return [
+              ...current.slice(-19),
+              {
+                at: Date.now(),
+                waiting: nextMetrics.queue.waiting,
+                active: nextMetrics.queue.active,
+              },
+            ];
+          });
+          setError(null);
+          return true;
+        }
+        const headers = { "X-Admin-Secret": activeSession.secret };
+        const [tenantResponse, metricResponse] = await Promise.all([
+          fetch("/admin/tenants", { headers }),
+          fetch("/admin/metrics/health", { headers }),
+        ]);
         if (!tenantResponse.ok || !metricResponse.ok)
-          throw new Error(
-            isDemo
-              ? "Demo dashboard is unavailable."
-              : "Your admin session is no longer valid.",
-          );
-        const tenantPayload = await tenantResponse.json();
-        const metricPayload = await metricResponse.json();
-        const nextTenants = isDemo ? tenantPayload.tenants : tenantPayload;
-        const nextMetrics = isDemo ? metricPayload.metrics : metricPayload;
+          throw new Error("Your admin session is no longer valid.");
+        const nextTenants = await tenantResponse.json();
+        const nextMetrics = await metricResponse.json();
         setTenants(nextTenants);
         setMetrics(nextMetrics);
         setSnapshots((current) => [
