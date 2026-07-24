@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "Express API with BullMQ background jobs",
+  "description": "Rate-limited multi-tenant AI API gateway",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -31,12 +31,5 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.23.1",
     "typescript": "^5.5.4"
-  },
-  "files": [
-    "es",
-    "lib"
-  ],
-  "types": "./lib/index.d.ts",
-  "jsnext:main": "./es/index.js",
-  "module": "./es/index.js"
+  }
 }

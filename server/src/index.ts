@@ -3,8 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import express, { Request, Response } from "express";
 import cors from "cors";
-import { Queue } from "bullmq";
-import { connection, chatQueue } from "./queue.js";
+import { chatQueue } from "./queue.js";
 import { adminRouter } from "./routes/admin.js";
 import { tenantAuth } from "./middleware/tenantAuth.js";
 import { rateLimit } from "./middleware/rateLimit.js";
@@ -15,63 +14,10 @@ const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }));
 app.use(express.json());
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// We instantiate a Queue here to add jobs and check states
-const videoQueue = new Queue("video-processing", { connection });
-
-// app.get("/", (req: Request, res: Response) => {
-//   res.send("API is running");
-// });
-
 app.use("/admin", adminRouter);
-
-// POST: Add job to queue
-app.post("/api/jobs", async (req: Request, res: Response) => {
-  try {
-    const { videoName } = req.body;
-
-    const job = await videoQueue.add("processVideo", {
-      videoName: videoName || "untitled-video.mp4",
-      uploadedAt: new Date().toISOString(),
-    });
-
-    res.status(202).json({
-      message: "Job added to queue",
-      jobId: job.id,
-    });
-  } catch (error) {
-    console.error("Error adding job:", error);
-    res.status(500).json({ error: "Failed to add job" });
-  }
-});
-
-// GET: Check job status (Used by the React frontend)
-app.get("/api/jobs/:id", async (req: Request, res: Response) => {
-  try {
-    // @ts-ignore
-    const job = await videoQueue.getJob(req.params.id);
-
-    if (!job) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    // Get the progress (worker updates this)
-    const progress = job.progress as number;
-
-    res.json({
-      id: job.id,
-      state: await job.getState(), // 'completed', 'active', 'waiting', etc.
-      progress: progress,
-      result: job.returnvalue, // The data returned by the worker when done
-    });
-  } catch (error) {
-    console.error("Error fetching job:", error);
-    res.status(500).json({ error: "Failed to fetch job" });
-  }
-});
 
 app.post(
   "/v1/chat/completions",
